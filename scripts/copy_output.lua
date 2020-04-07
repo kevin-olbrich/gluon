@@ -43,7 +43,7 @@ for _, image in ipairs(lib.images) do
 	local source = string.format('openwrt/bin/targets/%s/openwrt-%s-%s%s%s',
 		bindir, openwrt_target, image.name, image.in_suffix, image.extension)
 
-	lib.exec {'cp', source, destdir..'/'..destname}
+	lib.exec {'mv', source, destdir..'/'..destname}
 
 	for _, alias in ipairs(image.aliases) do
 		clean(image, alias)
@@ -64,5 +64,5 @@ if lib.opkg and (env.GLUON_DEVICES or '') == '' then
 	lib.exec {'rm', '-f', dest_dir('\0')..'/\0'}
 	lib.exec({'rmdir', '-p', dest_dir('\0')}, true, '2>/dev/null')
 	mkdir(dest_dir(package_prefix))
-	lib.exec {'cp', 'openwrt/bin/targets/'..bindir..'/packages/\0', dest_dir(package_prefix)}
+	lib.exec {'mv', 'openwrt/bin/targets/'..bindir..'/packages/\0', dest_dir(package_prefix)}
 end
