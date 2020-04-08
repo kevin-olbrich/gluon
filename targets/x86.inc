@@ -46,8 +46,7 @@ packages {
 }
 
 defaults {
-	factory = '-squashfs-combined',
-	factory_ext = '.img.gz',
+	factory = false,
 	sysupgrade = '-squashfs-combined',
 	sysupgrade_ext = '.img.gz',
 	manifest_aliases = {'combined-squashfs'}

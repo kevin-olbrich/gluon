@@ -21,8 +21,7 @@ packages {
 }
 
 device('generic', 'generic', {
-	factory = '-squashfs-combined',
-	factory_ext = '.img.gz',
+	factory = false,
 	sysupgrade = '-squashfs-combined',
 	sysupgrade_ext = '.img.gz',
 	manifest_aliases = {'combined-squashfs'}

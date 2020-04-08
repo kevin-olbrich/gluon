@@ -1,6 +1,5 @@
 defaults {
-	factory = '-ext4-sdcard',
-	factory_ext = '.img.gz',
+	factory = false,
 	sysupgrade = '-ext4-sdcard',
 	sysupgrade_ext = '.img.gz',
 }
