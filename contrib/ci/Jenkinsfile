@@ -1,3 +1,17 @@
+boolean targetNeedsRebuild(target) {
+	for (changeLogSet in currentBuild.changeSets) {
+		for (entry in changeLogSet.getItems()) {
+			for (file in entry.getAffectedFiles()) {
+				if (target.name == "x86-64" ||
+				    file.getPath() in ["modules", "targets/{$target.name}", "${target.name.split('-')[0]}.inc", "contrib/ci/Jenkinsfile"]) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 pipeline {
 	agent none
 	environment {
@@ -32,15 +46,42 @@ pipeline {
 			}
 		}
 		stage('build') {
-			agent { label 'gluon-docker-v2' }
+			agent { label "gluon-docker-v2" }
 			steps {
-				sh label: 'Identify runner', script: 'echo $SLAVE_NAME'
-				sh 'make update'
-				sh 'test -d /dl_cache && ln -s /dl_cache openwrt/dl || true'
-				timeout(time: 2, unit: "HOURS") {
-					sh 'make -j$(nproc) V=s'
+				script {
+					jobs = [:]
+					for (target in findFiles(glob: "targets/*")) {
+						if (target.name in ["generic"] ||
+						    target.name.endsWith(".inc") ||
+						    target.name.endsWith(".mk")) {
+							continue
+						}
+						if (!targetNeedsRebuild(target)) {
+							continue
+						}
+						jobs["${target.name}"] = {
+							agent { label "gluon-docker-v2" }
+							node {
+								stage("${target.name}") {
+									checkout scm
+									sh label: 'Identify runner', script: 'echo $SLAVE_NAME'
+									sh label: 'Debug', script: 'ls -lah'
+									sh 'make update'
+									sh 'test -d /dl_cache && ln -s /dl_cache openwrt/dl || true'
+									timeout(time: 2, unit: "HOURS") {
+										sh 'make -j$(nproc) V=s'
+									}
+									script {
+										if (target.name == "x86-64") {
+											stash includes: '**/output/images/factory/*-x86-64.img.gz', name: 'gluon-x86-64-factory'
+										}
+									}
+								}
+							}
+						}
+					}
+					parallel jobs
 				}
-				stash includes: '**/output/images/factory/*-x86-64.img.gz', name: 'gluon-x86-64-factory'
 			}
 		}
 		stage('test') {
